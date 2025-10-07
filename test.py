@@ -7,4 +7,4 @@ proxies={
     'https':proxyip,
 }
 data = requests.get(url=url,proxies=proxies)
-print(data.text)
+print(data.tvvvvvvvext)
