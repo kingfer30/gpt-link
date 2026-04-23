@@ -43,22 +43,25 @@ def process_accounts():
             # 解析HTML
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 查找所有包含指定文本的span
-            mail_titles = soup.find_all('span', class_='mail-title')
-            
-            found_subscription = False
-            for mail_title in mail_titles:
-                if mail_title and "ChatGPT - Your new plan" in mail_title.text:
-                    found_subscription = True
+            # 新页面：主题为 div.email-subject，日期为同卡片内 div.email-date
+            subjects = soup.find_all('div', class_='email-subject')
+            matched_subject = None
+            for subject_el in subjects:
+                if subject_el and "ChatGPT - Your new plan" in subject_el.get_text():
+                    matched_subject = subject_el
                     break
+            
+            found_subscription = matched_subject is not None
             
             if found_subscription:
                 print(f"账户: {acc_pass}----已订阅! ")
-                # 查找下一个span元素获取日期
-                next_span = mail_title.find_next_sibling('span')
-                if next_span:
-                    # 提取日期（去掉括号和空格）
-                    date_str = next_span.text.strip().replace('(', '').replace(')', '').strip()
+                date_str = None
+                card = matched_subject.find_parent('div', class_='email-card-content')
+                if card:
+                    date_el = card.find('div', class_='email-date')
+                    if date_el:
+                        date_str = date_el.get_text(strip=True)
+                if date_str:
                     result_line = f"{acc_pass}----成功----{date_str}"
                     results.append(result_line)
                     print(f"{Colors.GREEN}  成功: {acc_pass} - 日期: {date_str}{Colors.END}")

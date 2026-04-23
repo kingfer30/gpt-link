@@ -1,8 +1,9 @@
+import time
 import requests
 import json
 import webbrowser
 import subprocess
-import sys
+from DrissionPage import ChromiumOptions, ChromiumPage
 import argparse
 
 def fetch_checkout(access_token):
@@ -57,8 +58,13 @@ def fetch_checkout(access_token):
             
         print(f"成功获取checkout URL: {checkout_url}")
         
-        # 第三步: 使用Chrome打开URL
-        open_url_in_chrome(checkout_url)
+        #地址示例: https://pay.openai.com/c/pay/cs_live_a1jOLcGlSZskOUTbzl4Py1rq68tNxb49MJ2sSNdoCVDD8sSKQU3AZEwcGm#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdpamZkaWAnPydgaycpJ3ZwZ3Zmd2x1cWxqa1BrbHRwYGtgdnZAa2RnaWBhJz9jZGl2YCknZHVsTmB8Jz8ndW5aaWxzYFowNE1Kd1ZyRjNtNGt9QmpMNmlRRGJXb1xTd38xYVA2Y1NKZGd8RmZOVzZ1Z0BPYnBGU0RpdEZ9YX1GUHNqV200XVJyV2RmU2xqc1A2bklOc3Vub20yTHRuUjU1bF1Udm9qNmsnKSdjd2poVmB3c2B3Jz9xd3BgKSdnZGZuYndqcGthRmppancnPycmY2NjY2NjJyknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl
+        #1. 根据URL, 截取/c/pay/xxx# xxx这部分数据, 然后拼接到 https://api.stripe.com/v1/payment_pages/xxx/init 替换xxx , POST请求, 其中formData: redirect_type=url, browser_locale=en, eid=NA
+        #请求结果示例: {"config_id": "9b23d9f9-7439-4b78-a44f-dcefd52d1edf", "eid": "72a12176-2dee-4d3e-960c-f98b0be88ef0"}
+        #2. 请求POST接口: https://api.stripe.com/v1/payment_pages/xxx, 
+        # 其中formData: eid: 上一步获取到的id, tax_region[country]: US, tax_region[state]: AK, tax_region[postal_code]: 99501, tax_region[line1]: 1600 West 11th Avenue, tax_region[city]: Anchorage, key: xxx
+        #3. POST接口: https://api.stripe.com/v1/payment_methods
+        
         
     except requests.exceptions.RequestException as e:
         print(f"网络请求错误: {e}")
@@ -67,40 +73,10 @@ def fetch_checkout(access_token):
     except Exception as e:
         print(f"未知错误: {e}")
 
-def open_url_in_chrome(url):
-    """
-    自动打开Chrome浏览器并访问指定URL
-    """
-    try:
-        print(f"正在用Chrome打开: {url}")
-        
-        # Windows下的Chrome路径
-        chrome_paths = [
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-            r"C:\Users\%USERNAME%\AppData\Local\Google\Chrome\Application\chrome.exe"
-        ]
-        
-        chrome_found = False
-        for chrome_path in chrome_paths:
-            try:
-                subprocess.run([chrome_path, url], check=True)
-                chrome_found = True
-                print("成功打开Chrome浏览器")
-                break
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                continue
-        
-        if not chrome_found:
-            # 如果找不到Chrome，使用默认浏览器
-            print("未找到Chrome，使用默认浏览器打开")
-            webbrowser.open(url)
-            
-    except Exception as e:
-        print(f"打开浏览器失败: {e}")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='模拟fetch checkout API调用并打开浏览器')
+    parser = argparse.ArgumentParser(description='模拟fetch checkout API')
     parser.add_argument('--access_token', required=True, help='Bearer token用于API认证')
     
     args = parser.parse_args()
