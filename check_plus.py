@@ -177,6 +177,7 @@ def register_account_thread(accounts):
             proxies=proxies,
             impersonate="chrome131",
         )
+        print(r.text)
         res_json = response_json(r, "oauth/token")
 
         access_token = res_json["access_token"]
